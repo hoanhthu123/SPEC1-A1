@@ -1,0 +1,111 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* 🔥 FIX VIỀN XÁM + FULL SCREEN */
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background: #ffffff;
+  font-family: 'Nanum Gothic', sans-serif;
+}
+
+body,
+body * {
+  cursor: pointer;
+}
+
+/* 🔥 FIX CANVAS */
+canvas {
+  display: block;
+  position: fixed;   /* nằm dưới toàn bộ layout */
+  top: 0;
+  left: 0;
+  z-index: 0;
+}
+
+
+/* ---------- pop-up ---------- */
+
+/* lớp nền phủ toàn màn hình */
+.popup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;               /* nằm trên canvas */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(246, 239, 230, 0.75); /* #F6EFE6 mờ 50% -> thấy sketch bên dưới */
+  transition: opacity 0.4s ease;
+}
+
+.popup-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.popup-box {
+  position: relative;
+  width: 100%;
+  max-width: 60vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 48px 40px 40px;
+  background: #ffffff;
+  border: 1px solid #A6B69A;
+  border-radius: 16px;
+  color: #70876B;
+  cursor: default;
+}
+
+.popup-box * {
+  cursor: default;
+}
+
+.popup-box h1 {
+  font-size: 30px;
+  font-weight: 1000;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.popup-box h2 {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.popup-box p {
+  font-size: 17px;
+  line-height: 1.6;
+  font-weight: 300;
+  margin-bottom: 12px;
+}
+
+.popup-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #70876B;
+  font-family: inherit;
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer !important;
+}
+
+.popup-close:hover {
+  background: #F6EFE6;
+}
