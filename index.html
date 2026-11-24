@@ -1,79 +1,62 @@
 <!doctype html>
 <!--
   SPDX-License-Identifier: GPL-3.0-or-later
-  The WITLING — Copyright (C) 2026  The WITLING author
+  The Healing Web — Copyright (C) 2026  The Healing Web author
   Licensed under the GNU General Public License v3 or later. See LICENSE.
 -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>The WITLING</title>
+  <title>The Healing Web</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+  <!-- font duy nhất: Sarabun (light, thường, đậm, nghiêng) -->
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,300;0,400;0,700;0,800;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <style>
-    html, body { margin: 0; padding: 0; overflow: hidden; background: #F5F1E8; }
-    canvas { display: block; touch-action: none; }
-  </style>
   <script src="https://cdn.jsdelivr.net/npm/p5@1.9.4/lib/p5.min.js"></script>
 </head>
 <body>
 
-  <div id="popup" class="popup-overlay">
-    <div class="popup-box" role="dialog" aria-modal="true" aria-labelledby="popup-title">
-      <button id="popup-close" class="popup-close" aria-label="Close">&times;</button>
+  <!-- note: nút tròn ở góc phải dưới, bấm để mở / đóng ghi chú -->
+  <button id="note-btn" class="note-btn" aria-label="About this project" aria-expanded="false" aria-controls="note">i</button>
 
-      <h1 id="popup-title">LOOK INSIDE THE WITLING</h1>
-<br>
-      
-      <div>
-        <h2> ABOUT THIS PROJECT</h2>
-        <p style="font-style:oblique; text-decoration: underline; text-underline-offset: 4px;">"The way we tend to use resources is we extract them, we turn them into short-life products and then dispose of them. . . 
-        In ecosystems, the waste from one organism becomes the nutrient for
-         something else in that system"
-          Pawlyn, M. (2010), ‘Using Nature’s Genius in Architecture’, TEDSalon London.</p>
-<br>
-        <p>Michael Pawlyn, a British architect specialising in 
-        biomimicry and sustainable design, mentioned in a 
-        TEDtalk challenges the linear approach ciricular we design,
-         consume, and manage resources compared to our nature design, consume, and manage 
-         resources. His statement shed light on a motto "nature as 
-         the model and human development as the part of this model" 
-         for interconnection, resource circulation and regeneration. 
-         This idea aligns with the Sustainable Development Goal 11 
-         set by the United Nations: Sustainable Cities and Communities, 
-         which calls for cities and human settlements to become inclusive, 
-         safe, resilient, and sustainable, but not simply about building better 
-         cities, but about reflect on how urban systems function and coexist with 
-         the natural environment. When these messages are overlooked, 
-         sustainability is easily misunderstood as an action for human-consuming less and reducing damage, not a system where people, infrastructure, resources and nature support one another. 
-         This project demonstrates the similarity between human system and ecosystem 
-         development to vindicate that rather than function as an isolated system, 
-         the living city should function as an interconnected living ecosystem, 
-         where resources circulate, communities cooperate and systems adapt to environmental changes. Learn from nature, leave no waste behind, repurpose what is already built is the key to design systems 
-         that can continuously support life.</p>
+  <!-- pop-up giữa màn hình: header + 2 cột (thông tin | about) -->
+  <div id="note" class="note-overlay" hidden>
+    <div class="note-box" role="dialog" aria-modal="true" aria-labelledby="note-title">
 
-      </div> 
+      <header class="note-head">
+        <h1 id="note-title">Project Information</h1>
+        <button id="note-close" class="note-close" aria-label="Close">&times;</button>
+      </header>
 
-      <div>
-        <br>
-        <h2> CREDITS</h2>
-        Group name: DoubleHoang
-        <br> Member's name:
-        <br> s3980573 - Hoang Anh Thư
-        <br> s40 - Hoang Cong Tien
-      </div>
-<br>
-      <div> 
-        COMM2754, Digital Media Specialisation 1, Sem 3.2026 <br>
-        RMIT University Vietnam, Saigon South Campus, School of Communication and Design, Digital Media Program
+      <div class="note-cols">
+        <!-- cột 1: thông tin, dạng nhãn | nội dung -->
+        <dl class="note-info">
+          <div class="note-row"><dt>Name(s)</dt><dd>Hoang Anh Thu</dd></div>
+          <div class="note-row"><dt>Group Name</dt><dd>DoubleHoang</dd></div>
+          <div class="note-row"><dt>Group Members' Names</dt><dd>Hoang Anh Thu<br>Hoang Cong Tien</dd></div>
+          <div class="note-row"><dt>Course</dt><dd>COMM2754 Digital Media Specialization 1</dd></div>
+          <div class="note-row"><dt>Affiliation</dt><dd>RMIT University Vietnam, Saigon South Campus, School of Communication and Design, Digital Media Program</dd></div>
+          <div class="note-row"><dt>Date</dt><dd>24/11/2026</dd></div>
+          <div class="note-row"><dt>UN Sustainable Development Goal</dt><dd>SDG 11 - Make cities and human settlements inclusive, safe, resilient and sustainable</dd></div>
+          <div class="note-row"><dt>Document Link</dt><dd>
+        </dl>
+
+        <!-- cột 2: trích dẫn lớn + nguồn + bài viết -->
+        <article class="note-about">
+          <blockquote class="note-quote">
+            <p>&ldquo;The way we tend to use resources is we extract them, we turn them into short-life products and then dispose of them. . . In ecosystems, the waste from one organism becomes the nutrient for something else in that system.&rdquo;</p>
+            <cite>Pawlyn, M. (2010), &lsquo;Using Nature&rsquo;s Genius in Architecture&rsquo;, TEDSalon London.</cite>
+          </blockquote>
+
+          <p class="note-body">Michael Pawlyn, a British architect specialising in biomimicry and sustainable design, mentioned in a TEDtalk challenges the linear approach ciricular we design, consume, and manage resources compared to our nature design, consume, and manage resources. His statement shed light on a motto "nature as the model and human development as the part of this model" for interconnection, resource circulation and regeneration. This idea aligns with the Sustainable Development Goal 11 set by the United Nations: Sustainable Cities and Communities, which calls for cities and human settlements to become inclusive, safe, resilient, and sustainable, but not simply about building better cities, but about reflect on how urban systems function and coexist with the natural environment. When these messages are overlooked, sustainability is easily misunderstood as an action for human-consuming less and reducing damage, not a system where people, infrastructure, resources and nature support one another. This project demonstrates the similarity between human system and ecosystem development to vindicate that rather than function as an isolated system, the living city should function as an interconnected living ecosystem, where resources circulate, communities cooperate and systems adapt to environmental changes. Learn from nature, leave no waste behind, repurpose what is already built is the key to design systems that can continuously support life.</p>
+        </article>
       </div>
     </div>
   </div>
 
-  <!-- sketch.js vẽ 1 khung đứng yên dưới pop-up, đóng pop-up thì mới chạy -->
+  <!-- sketch.js chạy ngay khi mở trang -->
   <script src="sketch.js"></script>
   <script src="script.js"></script>
 </body>
