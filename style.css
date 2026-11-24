@@ -4,7 +4,12 @@
   box-sizing: border-box;
 }
 
-/* 🔥 FIX VIỀN XÁM + FULL SCREEN */
+/* font chung cho cả trang, đổi font chỉ cần sửa ở đây */
+:root {
+  --font: 'Sarabun', sans-serif;
+}
+
+/* full screen, không viền, không thanh cuộn */
 html, body {
   width: 100%;
   height: 100%;
@@ -12,8 +17,13 @@ html, body {
 }
 
 body {
-  background: #ffffff;
-  font-family: 'Nanum Gothic', sans-serif;
+  background: #F5F1E8;
+  font-family: var(--font);
+}
+
+/* nút mặc định không kế thừa font -> ép kế thừa từ body */
+button {
+  font: inherit;
 }
 
 body,
@@ -21,91 +31,245 @@ body * {
   cursor: pointer;
 }
 
-/* 🔥 FIX CANVAS */
+/* canvas nằm dưới toàn bộ layout */
 canvas {
+  touch-action: none;
   display: block;
-  position: fixed;   /* nằm dưới toàn bộ layout */
+  position: fixed;
   top: 0;
   left: 0;
   z-index: 0;
 }
 
 
-/* ---------- pop-up ---------- */
+/* ---------- note (nút tròn góc phải dưới) ---------- */
 
-/* lớp nền phủ toàn màn hình */
-.popup-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 10;               /* nằm trên canvas */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  background: rgba(246, 239, 230, 0.75); /* #F6EFE6 mờ 50% -> thấy sketch bên dưới */
-  transition: opacity 0.4s ease;
+:root {
+  --note-dark: #70876B;
+  --note-leaf: #A6B69A;
+  --note-bg: #F6EFE6;
 }
 
-.popup-overlay.hidden {
-  opacity: 0;
+.note-btn {
+  position: fixed;
+  right: 14px;
+  bottom: 14px;
+  z-index: 10;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--note-dark);
+  border-radius: 50%;
+  background: var(--note-bg);
+  color: var(--note-dark);
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+/* vòng tròn lan ra nhẹ để gợi ý bấm vào */
+.note-btn::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 50%;
+  border: 1px solid var(--note-dark);
+  animation: note-pulse 2.4s ease-out infinite;
   pointer-events: none;
 }
 
-.popup-box {
-  position: relative;
-  width: 100%;
-  max-width: 60vw;
-  max-height: 90vh;
-  overflow-y: auto;
-  padding: 48px 40px 40px;
-  background: #ffffff;
-  border: 1px solid #A6B69A;
-  border-radius: 16px;
-  color: #70876B;
-  cursor: default;
+@keyframes note-pulse {
+  from { transform: scale(1);   opacity: 0.6; }
+  to   { transform: scale(1.7); opacity: 0; }
 }
 
-.popup-box * {
-  cursor: default;
-}
+.note-btn:hover { transform: scale(1.08); }
 
-.popup-box h1 {
-  font-size: 30px;
-  font-weight: 1000;
-  margin-bottom: 16px;
+.note-btn[aria-expanded="true"] {
+  background: var(--note-dark);
+  color: var(--note-bg);
+}
+.note-btn[aria-expanded="true"]::after { animation: none; opacity: 0; }
+
+/* lớp nền mờ phủ toàn màn hình, pop-up nằm giữa */
+.note-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-.popup-box h2 {
-  font-size: 22px;
-  font-weight: 600;
-  margin-bottom: 16px;
+  padding: 24px;
+  background: rgba(60, 50, 40, 0.45);
+  animation: note-fade 0.25s ease-out;
 }
 
-.popup-box p {
-  font-size: 17px;
-  line-height: 1.6;
-  font-weight: 300;
-  margin-bottom: 12px;
+.note-overlay[hidden] { display: none; }
+
+/* hộp pop-up: header cố định ở trên, phần dưới cuộn */
+.note-box {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 70vw;
+  max-width: 100%;
+  max-height: calc(100vh - 48px);
+  background: #ffffff;
+  border-radius: 18px;
+  color: var(--note-dark);
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  animation: note-open 0.25s ease-out;
 }
 
-.popup-close {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 36px;
-  height: 36px;
+@keyframes note-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes note-open {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.note-box,
+.note-box * { cursor: default; }
+
+/* ----- header ----- */
+.note-head {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;     /* tiêu đề ở giữa */
+  padding: 30px 88px;
+  background: var(--note-bg);
+  border-bottom: 1px solid var(--note-leaf);
+}
+
+.note-head h1 {
+  font-size: 34px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.note-close {
+  position: absolute;          /* nút × ở góc phải, không đẩy tiêu đề lệch */
+  right: 32px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
   border: none;
   border-radius: 50%;
   background: transparent;
-  color: #70876B;
-  font-family: inherit;
-  font-size: 26px;
+  color: var(--note-dark);
+  font-size: 30px;
   line-height: 1;
   cursor: pointer !important;
 }
 
-.popup-close:hover {
-  background: #F6EFE6;
+.note-close:hover { background: rgba(0, 0, 0, 0.06); }
+
+/* ----- 2 cột ----- */
+.note-cols {
+  flex: 1;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: 1fr 1.35fr;
+  gap: 56px;
+  padding: 40px 48px 48px;
+}
+
+/* thanh cuộn cùng màu palette */
+.note-cols {
+  scrollbar-width: thin;                              /* Firefox */
+  scrollbar-color: var(--note-leaf) var(--note-bg);
+}
+.note-cols::-webkit-scrollbar { width: 10px; }        /* Chrome, Edge, Safari */
+.note-cols::-webkit-scrollbar-track { background: var(--note-bg); }
+.note-cols::-webkit-scrollbar-thumb {
+  background: var(--note-leaf);
+  border-radius: 10px;
+  border: 2px solid var(--note-bg);
+}
+.note-cols::-webkit-scrollbar-thumb:hover { background: var(--note-dark); }
+
+/* cột 1: hàng nhãn | nội dung, có đường kẻ giữa các hàng */
+.note-info {
+  align-self: start;
+  padding-right: 28px;
+  margin-right: -28px;          /* đường kẻ dọc nằm giữa khoảng cách 2 cột */
+  border-right: 1px solid var(--note-leaf);
+}
+
+.note-row {
+  display: grid;
+  grid-template-columns: 42% 1fr;
+  gap: 20px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--note-leaf);
+}
+
+.note-row:first-child { padding-top: 0; }
+.note-row:last-child { border-bottom: none; padding-bottom: 0; }
+
+.note-row dt {
+  font-size: 14px;
+  font-weight: 700;
+  opacity: 0.75;               /* nhãn nhạt + nhỏ hơn nội dung */
+  padding-top: 3px;
+}
+
+.note-row dd {
+  font-size: 18px;
+  line-height: 1.45;
+}
+
+/* cột 2: trích dẫn lớn -> nguồn nhỏ -> đường kẻ -> bài viết */
+.note-quote {
+  padding-bottom: 32px;
+  margin-bottom: 32px;
+  border-bottom: 1px solid var(--note-leaf);
+}
+
+.note-quote p {
+  font-style: italic;
+  font-size: clamp(22px, 2.3vw, 34px);
+  line-height: 1.4;
+  margin-bottom: 16px;
+}
+
+.note-quote cite {
+  display: block;
+  font-style: normal;
+  font-size: 14px;
+  opacity: 0.75;
+}
+
+.note-body {
+  font-size: 16pt;
+  font-weight: 300;            /* light */
+  line-height: 1.75;
+}
+
+/* màn hình hẹp: 2 cột xếp chồng */
+@media (max-width: 900px) {
+  .note-box { width: 100%; }
+  .note-head { padding: 20px 60px; }
+  .note-head h1 { font-size: 26px; }
+  .note-close { right: 12px; }
+  .note-cols {
+    grid-template-columns: 1fr;
+    gap: 32px;
+    padding: 24px 20px 32px;
+  }
+  .note-info {
+    padding-right: 0;
+    margin-right: 0;
+    border-right: none;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--note-leaf);
+  }
+  .note-row { grid-template-columns: 1fr; gap: 4px; }
 }
