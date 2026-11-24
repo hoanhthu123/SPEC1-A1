@@ -103,14 +103,12 @@ function makeIconMask(img) {
 
 function setup() {
   createCanvas(BASE_W, BASE_H);
-  textFont('Nanum Gothic');
+  textFont('Sarabun'); // cùng font với trang (load trong index.html)
   pixelDensity(1);
   strokeCap(ROUND);
 
   seed = floor(Math.random() * 100);
   makeArtwork();
-
-  if (document.getElementById("popup")) noLoop();
 }
 
 // make seed
@@ -119,6 +117,10 @@ function makeArtwork() {
   noiseSeed(seed);
 
   palette = random(palettes);
+  // nút note dùng cùng màu với palette
+  document.documentElement.style.setProperty("--note-dark", palette.dark);
+  document.documentElement.style.setProperty("--note-leaf", palette.leaf);
+  document.documentElement.style.setProperty("--note-bg", palette.bg);
 
   // the leaf size changes a little every time
   // the leaf is bigger than the screen, so we only see the middle:
@@ -275,7 +277,21 @@ function makeBranch(side, startX, tx, ty, bubbleIndex, weight) {
     side: side, pts: pts, twigs: twigs, weight: weight,
     bubble: bubbleIndex,
     base: { x: tx, y: ty },     // vị trí gốc của bubble (chưa trôi)
-    delay: random(0, 0.35)      // gân mọc lần lượt
+    delay: random(0, 0.35),     // gân mọc lần lượt
+    // chấm tròn chạy dọc gân (dùng Math.random để không đổi hình lá theo seed)
+    flow: makeFlow(pts)
+  };
+}
+
+// thông số chấm tròn chạy trên 1 gân
+function makeFlow(pts) {
+  let len = 0;
+  for (let k = 1; k < pts.length; k++) len += dist(pts[k - 1].x, pts[k - 1].y, pts[k].x, pts[k].y);
+  return {
+    len: max(len, 1),
+    count: 2 + Math.floor(Math.random() * 2), // 2-3 chấm mỗi gân
+    speed: 0.6 + Math.random() * 0.5,         // pixel mỗi frame
+    phase: Math.random()
   };
 }
 
@@ -498,6 +514,8 @@ function drawVeins(gap) {
     translate(shiftX, 0);
     drawVeinLine(v, g, off);
     drawVeinTwigs(v, g, off);
+    drawVeinDots(v, g, off);
+    stroke(palette.dark);
     pop();
   }
 }
@@ -519,6 +537,62 @@ function drawVeinLine(v, g, off) {
     strokeWeight(lerp(v.weight, 0.5, a.u)); // gân thon dần
     line(a.x + off.x * ea, a.y + off.y * ea, b.x + off.x * eb, b.y + off.y * eb);
   }
+}
+
+// điểm trên gân ở vị trí u (0-1), đã uốn theo bubble
+function veinPointAt(v, u, off) {
+  let pts = v.pts;
+  let f = u * (pts.length - 1);
+  let k = min(floor(f), pts.length - 2);
+  let a = pts[k], b = pts[k + 1];
+  let t = f - k;
+  let e = lerp(a.u * a.u, b.u * b.u, t);
+  return { x: lerp(a.x, b.x, t) + off.x * e, y: lerp(a.y, b.y, t) + off.y * e };
+}
+
+// chấm tròn nhỏ chạy NGƯỢC về vết rách, như đưa dinh dưỡng về chữa lành:
+// đầu gân (bubble) -> dọc gân -> điểm mọc trên trục chính -> dọc trục chính -> vết rách
+// chỉ chạy khi gân đã mọc xong; hiện dần ở đầu gân, mờ dần + nhỏ dần khi gần vết rách
+const WOUND_FADE = 0.35; // phần cuối đường đi (gần vết rách) mờ dần
+function drawVeinDots(v, g, off) {
+  if (g < 1) return;
+  let fl = v.flow;
+  let startX = v.pts[0].x;            // điểm mọc trên trục chính (y = 0)
+  let woundX = tearX(0);              // trục chính chạm vết rách ở đây
+  let axisLen = abs(startX - woundX);
+  let total = fl.len + axisLen;
+  noStroke();
+  for (let k = 0; k < fl.count; k++) {
+    let s = (frameCount * fl.speed / total + fl.phase + k / fl.count) % 1;
+    let d = s * total;                // quãng đường đã đi
+    let p;
+    if (d < fl.len) {
+      p = veinPointAt(v, 1 - d / fl.len, off); // đi dọc gân, từ bubble vào
+    } else {
+      p = { x: lerp(startX, woundX, (d - fl.len) / max(axisLen, 1)), y: 0 }; // dọc trục chính
+    }
+    let fadeIn = constrain(s / 0.08, 0, 1);
+    let fadeOut = constrain((1 - s) / WOUND_FADE, 0, 1);
+    drawFlowDot(p.x, p.y, min(fadeIn, fadeOut * fadeOut), 5.5);
+  }
+}
+
+// màu chấm tròn = màu lá nhưng sáng hơn / tối hơn
+// DOT_SHADE > 0: sáng hơn (pha trắng), < 0: tối hơn (pha đen)
+const DOT_SHADE = 0.55;
+function dotColor() {
+  let base = color(palette.leaf);
+  return DOT_SHADE >= 0
+    ? lerpColor(base, color(255), DOT_SHADE)
+    : lerpColor(base, color(0), -DOT_SHADE);
+}
+
+// 1 chấm tròn, a = độ đậm (0-1)
+function drawFlowDot(x, y, a, r) {
+  let c = dotColor();
+  c.setAlpha(255 * a);
+  fill(c);
+  circle(x, y, r * 2 * (0.6 + 0.4 * a));
 }
 
 // nhánh con dời theo điểm gốc của nó trên gân
@@ -607,6 +681,23 @@ function drawBubbleLinks(pos) {
     let a = pos[i];
     let b = pos[(i + 1) % pos.length];
     line(a.x, a.y, b.x, b.y);
+  }
+  drawLinkDots(pos);
+  stroke(palette.dark);
+}
+
+// chấm tròn chạy dọc line nối bubble (phần trong bubble bị bubble che)
+function drawLinkDots(pos) {
+  noStroke();
+  for (let i = 0; i < pos.length; i++) {
+    if (bubbles[i].noLink) continue;
+    let a = pos[i];
+    let b = pos[(i + 1) % pos.length];
+    let len = max(dist(a.x, a.y, b.x, b.y), 1);
+    for (let k = 0; k < 2; k++) {
+      let u = (frameCount * 0.7 / len + i * 0.37 + k / 2) % 1;
+      drawFlowDot(lerp(a.x, b.x, u), lerp(a.y, b.y, u), sin(PI * u), 4.8);
+    }
   }
 }
 
