@@ -1,22 +1,40 @@
-// pop-up
-// và lúc đó artwork mới bắt đầu chạy.
+// 2 nút tròn ở góc phải dưới canvas, mỗi nút mở 1 pop-up giữa màn hình:
+//   "i" -> thông tin dự án (#note)
+//   "?" -> cách dùng (#help)
+// đóng bằng nút ×, bấm ra ngoài pop-up, hoặc phím Esc. artwork vẫn chạy bình thường
 
-const popup = document.getElementById("popup");
-const closeBtn = document.getElementById("popup-close");
-let started = false; // để chỉ chạy 1 lần
+const popups = [
+  { box: document.getElementById("note"), btn: document.getElementById("note-btn") },
+  { box: document.getElementById("help"), btn: document.getElementById("help-btn") }
+];
 
-function closePopup() {
-  if (started) return;
-  started = true;
-
-  popup.classList.add("hidden"); // mờ dần (xem style.css)
-  setTimeout(() => popup.remove(), 400); // xoá hẳn sau khi mờ xong
-
-  loop(); // cho draw() trong sketch.js chạy tiếp
+// mở 1 pop-up (đóng pop-up còn lại), hoặc đóng hết nếu p = null
+function showPopup(p) {
+  for (let q of popups) {
+    let open = q === p;
+    q.box.hidden = !open;
+    q.btn.setAttribute("aria-expanded", open);
+  }
+  if (p) p.box.querySelector(".note-close").focus();
 }
 
-closeBtn.addEventListener("click", closePopup);
+for (let p of popups) {
+  // bấm nút tròn: đang mở thì đóng, đang đóng thì mở
+  p.btn.addEventListener("click", () => showPopup(p.box.hidden ? p : null));
+  p.box.querySelector(".note-close").addEventListener("click", () => showPopup(null));
+  // bấm vào nền mờ (ngoài pop-up) -> đóng
+  p.box.addEventListener("click", (e) => {
+    if (e.target === p.box) showPopup(null);
+  });
+}
 
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") closePopup();
+  if (e.key === "Escape") showPopup(null);
+  // R: sketch.js vẽ lá mới -> đóng pop-up để xem
+  if (e.key === "r" || e.key === "R") showPopup(null);
+  // I: mở pop-up thông tin dự án (bấm lần nữa để đóng)
+  if (e.key === "i" || e.key === "I") {
+    let info = popups[0];
+    showPopup(info.box.hidden ? info : null);
+  }
 });
