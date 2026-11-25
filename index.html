@@ -1,14 +1,14 @@
 <!doctype html>
 <!--
   SPDX-License-Identifier: GPL-3.0-or-later
-  The Healing Web — Copyright (C) 2026  The Healing Web author
+  Look into the wilting — Copyright (C) 2026  Look into the wilting author
   Licensed under the GNU General Public License v3 or later. See LICENSE.
 -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>The Healing Web</title>
+  <title>Look into the wilting</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <!-- font duy nhất: Sarabun (light, thường, đậm, nghiêng) -->
@@ -18,8 +18,30 @@
 </head>
 <body>
 
-  <!-- note: nút tròn ở góc phải dưới, bấm để mở / đóng ghi chú -->
+  <!-- 2 nút tròn ở góc phải dưới: "i" (thông tin) ở trên, "?" (cách dùng) ở dưới -->
   <button id="note-btn" class="note-btn" aria-label="About this project" aria-expanded="false" aria-controls="note">i</button>
+  <button id="help-btn" class="note-btn" aria-label="How to use" aria-expanded="false" aria-controls="help">?</button>
+
+  <!-- pop-up cách dùng (nhỏ hơn pop-up thông tin) -->
+  <div id="help" class="note-overlay" hidden>
+    <div class="note-box help-box" role="dialog" aria-modal="true" aria-labelledby="help-title">
+
+      <header class="note-head">
+        <h1 id="help-title">How to Use</h1>
+        <button class="note-close" aria-label="Close">&times;</button>
+      </header>
+
+      <div class="help-body">
+
+        <ul class="help-list">
+          <li><kbd>r/ R</kbd><span>See other living support one.</span></li>
+          <li><kbd>t/ T</kbd><span>See one living supports others.</span></li>
+          <li><kbd>i</kbd><span>Open the project information.</span></li>
+          <li><kbd>Esc</kbd><span>Close this window.</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
 
   <!-- pop-up giữa màn hình: header + 2 cột (thông tin | about) -->
   <div id="note" class="note-overlay" hidden>
@@ -27,7 +49,7 @@
 
       <header class="note-head">
         <h1 id="note-title">Project Information</h1>
-        <button id="note-close" class="note-close" aria-label="Close">&times;</button>
+        <button class="note-close" aria-label="Close">&times;</button>
       </header>
 
       <div class="note-cols">
@@ -40,7 +62,14 @@
           <div class="note-row"><dt>Affiliation</dt><dd>RMIT University Vietnam, Saigon South Campus, School of Communication and Design, Digital Media Program</dd></div>
           <div class="note-row"><dt>Date</dt><dd>24/11/2026</dd></div>
           <div class="note-row"><dt>UN Sustainable Development Goal</dt><dd>SDG 11 - Make cities and human settlements inclusive, safe, resilient and sustainable</dd></div>
-          <div class="note-row"><dt>Document Link</dt><dd>
+          <div class="note-row"><dt>Document Online Link</dt> <dd>
+    <a href="https://hoanhthu123.github.io/S3980573-Spec1-A1w5-OnlineDocument/" style="color: black; text-decoration: none;"
+       target="_blank" 
+       rel="noopener noreferrer">
+      View Online Document
+    </a>
+  </dd>
+</div>
         </dl>
 
         <!-- cột 2: trích dẫn lớn + nguồn + bài viết -->
