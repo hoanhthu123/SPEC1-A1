@@ -13,6 +13,10 @@
 //
 let seed;
 let healing = 0;   // 0 = fully torn, 1 = fully healed
+let maxHealing = 0; // mức lành cao nhất đã đạt -> độ dài sợi chỉ lúc bị đứt
+let reverseFrame = 0; // frame lúc nhấn T -> tính thời gian sợi chỉ đứt
+let reversed = false; // phím T: true = quá trình đảo ngược (vết thương hở ra)
+let flowTime = 0;  // đồng hồ riêng của chấm tròn trên gân: tăng = chạy về vết rách, giảm = chạy ra bubble
 let veinGrow = 0;  // 0 -> 1: gân mọc dần ra từ trục chính
 let threads = [];
 let veins = [];
@@ -132,6 +136,8 @@ function makeArtwork() {
   makeThreads();
   makeLabels();
   healing = 0;
+  maxHealing = 0;
+  reversed = false; // lá mới luôn bắt đầu bằng quá trình lành
 }
 
 // mỗi bubble random hiện chữ (từ "words") hoặc icon (từ folder img)
@@ -405,15 +411,18 @@ function makeThreads() {
       sag: random(4, 8),               // how much it hangs down (gravity)
       weight: random(0.9, 1.3),        // cùng độ dày với gân nhánh
       delay: i / count * 0.8,          // threads appear one after another
-      wobble: random(1000)             // own noise offset, for a shaky line
+      wobble: random(1000),            // own noise offset, for a shaky line
+      cut: 0.35 + Math.random() * 0.3  // chỗ sợi chỉ đứt khi nhấn T (Math.random -> không đổi hình lá)
     });
   }
 }
 
 function draw() {
   background(palette.bg);
-  healing = min(healing + 0.002, 1);
-  let gap = lerp(140, 4, customSmoothstep(0, 1, healing));
+  updateProcess();
+  // lành: mượt (smoothstep). hở ra (phím T): tuyến tính -> dứt khoát, không chậm dần
+  let h = reversed ? healing : customSmoothstep(0, 1, healing);
+  let gap = lerp(140, 4, h);
 
   push();
   translate(width / 2, height / 2); // (0, 0) is now the centre
@@ -426,6 +435,17 @@ function draw() {
   drawVeinsAndThreads(gap, frame);
   drawCTA(frame);
   drawBubbles();
+}
+
+// tiến trình lành / hở mỗi frame (phím T đổi chiều)
+const HEAL_SPEED = 0.002;    // lành chậm (~8 giây)
+const REVERSE_SPEED = 0.012; // hở ra nhanh (~1.4 giây), nhanh gấp 6 lần lúc lành
+function updateProcess() {
+  let dir = reversed ? -1 : 1;                       // 1 = lành lại, -1 = hở ra
+  let speed = reversed ? REVERSE_SPEED : HEAL_SPEED;
+  healing = constrain(healing + speed * dir, 0, 1);  // healing giảm -> gap lớn dần -> 2 nửa lá tách ra
+  maxHealing = max(maxHealing, healing);             // mức lành cao nhất -> độ dài sợi chỉ lúc bị đứt
+  flowTime += reversed ? -2 : 1;                     // chấm tròn trên gân đổi chiều, chạy ngược nhanh gấp đôi
 }
 
 // 4 góc frame để chữ CTA
@@ -457,7 +477,7 @@ function drawCTA(frame) {
   fill(palette.dark);
   textSize(constrain(frame * 0.4, 11, 18)); // fits inside the frame
   textAlign(CENTER, CENTER);
-  text("Learn from nature, leave no waste behind, repurpose what is already built.",
+  text("Learn from nature, be part of it, not apart from it.",
        width / 2, height - frame / 2);
 }
 
@@ -550,9 +570,10 @@ function veinPointAt(v, u, off) {
   return { x: lerp(a.x, b.x, t) + off.x * e, y: lerp(a.y, b.y, t) + off.y * e };
 }
 
-// chấm tròn nhỏ chạy NGƯỢC về vết rách, như đưa dinh dưỡng về chữa lành:
+// chấm tròn nhỏ chạy về vết rách, như đưa dinh dưỡng về chữa lành:
 // đầu gân (bubble) -> dọc gân -> điểm mọc trên trục chính -> dọc trục chính -> vết rách
-// chỉ chạy khi gân đã mọc xong; hiện dần ở đầu gân, mờ dần + nhỏ dần khi gần vết rách
+// khi nhấn T (flowTime giảm dần) chấm chạy ngược lại: vết rách -> trục chính -> gân -> bubble
+// chỉ chạy khi gân đã mọc xong; mờ + nhỏ khi ở gần vết rách, hiện rõ ở phía bubble
 const WOUND_FADE = 0.35; // phần cuối đường đi (gần vết rách) mờ dần
 function drawVeinDots(v, g, off) {
   if (g < 1) return;
@@ -563,7 +584,10 @@ function drawVeinDots(v, g, off) {
   let total = fl.len + axisLen;
   noStroke();
   for (let k = 0; k < fl.count; k++) {
-    let s = (frameCount * fl.speed / total + fl.phase + k / fl.count) % 1;
+    // s = vị trí trên đường đi (0 = ở bubble, 1 = ở vết rách)
+    // dùng flowTime thay vì frameCount -> đổi chiều mượt, chấm không bị nhảy chỗ
+    let s = flowTime * fl.speed / total + fl.phase + k / fl.count;
+    s = ((s % 1) + 1) % 1; // giữ trong 0-1 kể cả khi flowTime âm
     let d = s * total;                // quãng đường đã đi
     let p;
     if (d < fl.len) {
@@ -624,24 +648,47 @@ function drawThreads(gap) {
   noFill();
   stroke(palette.dark);
   for (let t of threads) {
-    let grow = constrain((healing - t.delay) / 0.15, 0, 1);
-    if (grow <= 0) continue;
-
     // start point (inside left half) and end point (inside right half)
     let ax = tearX(t.yA) - t.depthA - gap / 2;
     let bx = tearX(t.yB) + t.depthB + gap / 2;
-
     strokeWeight(t.weight);
-    beginShape();
-    for (let u = 0; u <= grow + 0.001; u += 0.025) {
-      let x = lerp(ax, bx, u);
-      let y = lerp(t.yA, t.yB, u);
-      y += t.sag * sin(PI * u);                                       // hang down in the middle
-      y += (noise(t.wobble + u * 3, frameCount * 0.01) - 0.5) * 2;    // slight shake, like a hand-drawn line
-      vertex(x, y);
+
+    if (!reversed) {
+      // đang lành: sợi chỉ mọc dần từ trái sang phải
+      let grow = constrain((healing - t.delay) / 0.15, 0, 1);
+      if (grow > 0) drawThreadPiece(t, ax, bx, 0, grow);
+    } else {
+      drawSnappedThread(t, ax, bx);
     }
-    endShape();
   }
+}
+
+// nhấn T: sợi chỉ đứt ở chỗ t.cut, 2 đoạn co rút về 2 mép lá rồi biến mất
+function drawSnappedThread(t, ax, bx) {
+  let grow = constrain((maxHealing - t.delay) / 0.15, 0, 1); // độ dài sợi lúc nhấn T
+  if (grow <= 0) return;                                      // sợi chưa mọc -> không vẽ
+
+  // snap: 0 = chưa đứt, 1 = đã co hết
+  // các sợi đứt gần như cùng lúc (cách nhau rất ít), mỗi sợi co rất nhanh (6 frame) -> dứt khoát
+  let snap = constrain((frameCount - reverseFrame - t.delay * 30) / 6, 0, 1);
+
+  let left = min(t.cut, grow) * (1 - snap);   // đoạn trái: từ 0 tới left
+  let right = 1 - (1 - t.cut) * (1 - snap);   // đoạn phải: từ right tới 1
+  if (left > 0) drawThreadPiece(t, ax, bx, 0, left);
+  if (grow >= 1 && right < 1) drawThreadPiece(t, ax, bx, right, 1); // sợi chưa nối tới bên phải -> không có đoạn phải
+}
+
+// vẽ 1 đoạn sợi chỉ, từ u0 tới u1 (0 = đầu bên trái, 1 = đầu bên phải)
+function drawThreadPiece(t, ax, bx, u0, u1) {
+  beginShape();
+  for (let u = u0; u <= u1 + 0.001; u += 0.025) {
+    let x = lerp(ax, bx, u);
+    let y = lerp(t.yA, t.yB, u);
+    y += t.sag * sin(PI * u);                                       // hang down in the middle
+    y += (noise(t.wobble + u * 3, frameCount * 0.01) - 0.5) * 2;    // slight shake, like a hand-drawn line
+    vertex(x, y);
+  }
+  endShape();
 }
 
 // bubbles
@@ -728,11 +775,17 @@ function drawBubbleIcon(b, p, r) {
   noTint();
 }
 
-// R
+// R: lá mới
+// T: đảo ngược quá trình (lành <-> hở ra), nhấn lần nữa để lành lại
 function keyPressed() {
   if (key === "r" || key === "R") {
     seed = floor(Math.random() * 100000);
     makeArtwork();
+  }
+  if (key === "t" || key === "T") {
+    reversed = !reversed;
+    maxHealing = healing;        // độ dài sợi chỉ tính từ lúc này
+    reverseFrame = frameCount;   // mốc thời gian để sợi chỉ đứt lần lượt
   }
 }
 
