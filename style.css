@@ -42,7 +42,7 @@ canvas {
 }
 
 
-/* ---------- note (nút tròn góc phải dưới) ---------- */
+/* ---------- 2 nút tròn góc phải dưới: "i" ở trên, "?" ở dưới ---------- */
 
 :root {
   --note-dark: #70876B;
@@ -53,7 +53,6 @@ canvas {
 .note-btn {
   position: fixed;
   right: 14px;
-  bottom: 14px;
   z-index: 10;
   width: 40px;
   height: 40px;
@@ -82,6 +81,9 @@ canvas {
   from { transform: scale(1);   opacity: 0.6; }
   to   { transform: scale(1.7); opacity: 0; }
 }
+
+#note-btn { bottom: 66px; }   /* "i" nằm trên */
+#help-btn { bottom: 14px; }   /* "?" nằm dưới cùng */
 
 .note-btn:hover { transform: scale(1.08); }
 
@@ -272,4 +274,54 @@ canvas {
     border-bottom: 1px solid var(--note-leaf);
   }
   .note-row { grid-template-columns: 1fr; gap: 4px; }
+}
+
+/* ---------- pop-up cách dùng ---------- */
+
+.help-box { width: min(560px, 100%); }
+
+.help-body {
+  overflow-y: auto;
+  padding: 36px 48px 44px;
+}
+
+/* câu chính, to và ở giữa */
+.help-lead {
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+  padding-bottom: 28px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--note-leaf);
+}
+
+.help-list { list-style: none; }
+
+.help-list li {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+  font-size: 16px;
+  font-weight: 300;
+  line-height: 1.5;
+}
+
+/* phím bấm */
+.help-list kbd {
+  justify-self: start;
+  min-width: 40px;
+  padding: 6px 10px;
+  border: 1px solid var(--note-dark);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .help-box { width: 100%; }
+  .help-body { padding: 24px 20px 32px; }
 }
